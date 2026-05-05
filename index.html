@@ -15,9 +15,7 @@
 
   html, body {
     height: 100%;
-    overflow: hidden; /* 🚫 полностью убрали скролл */
-    position: fixed;
-    width: 100%;
+    overflow: hidden;
   }
 
   body {
@@ -65,20 +63,35 @@
     font-size: 13px;
     color: #777;
     margin-bottom: 18px;
+    font-weight: 400;
   }
 
+  /* BUTTON */
   .btn {
     width: 100%;
     padding: 14px;
     border: none;
     border-radius: 16px;
-    background: linear-gradient(135deg, #2f80ed, #56ccf2);
-    color: white;
     font-size: 16px;
+    transition: 0.25s ease;
   }
 
-  .btn:active {
+  .btn.primary {
+    background: linear-gradient(135deg, #2f80ed, #56ccf2);
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(47,128,237,0.25);
+  }
+
+  .btn.primary:active {
     transform: scale(0.97);
+  }
+
+  .btn.disabled {
+    background: #e5e5e5;
+    color: #999;
+    cursor: not-allowed;
+    box-shadow: none;
   }
 
   /* PHONE */
@@ -137,7 +150,6 @@
     border-radius: 14px;
     border: 1px solid rgba(0,0,0,0.08);
     background: #f5f5f5;
-
     outline: none;
   }
 
@@ -158,14 +170,14 @@
   <!-- SCREEN 1 -->
   <div class="screen active" id="s1">
     <h1>Добро пожаловать</h1>
-    <p class="subtext">Современный мессенджер</p>
-    <button class="btn" onclick="go('s2')">Войти</button>
+    <p class="subtext">Современный мессенджер нового поколения</p>
+    <button class="btn primary" onclick="go('s2')">Войти</button>
   </div>
 
   <!-- SCREEN 2 -->
   <div class="screen" id="s2">
 
-    <h1>Введите номер</h1>
+    <h1>С каким номером телефона хотите войти?</h1>
     <p class="subtext">На него придёт код</p>
 
     <div class="phone-wrap">
@@ -175,7 +187,10 @@
 
     <div class="error" id="err"></div>
 
-    <button class="btn" style="margin-top:20px" onclick="check()">Продолжить</button>
+    <button id="btnNext" class="btn disabled" disabled style="margin-top:20px">
+      Продолжить
+    </button>
+
   </div>
 
   <!-- SCREEN 3 -->
@@ -185,15 +200,15 @@
     <p class="subtext">Если не получили СМС, проверьте чат "Коды подтверждения"</p>
 
     <div class="code-box">
-      <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1"/>
-      <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1"/>
-      <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1"/>
-      <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1"/>
-      <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1"/>
-      <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1"/>
+      <input type="tel" inputmode="numeric" maxlength="1"/>
+      <input type="tel" inputmode="numeric" maxlength="1"/>
+      <input type="tel" inputmode="numeric" maxlength="1"/>
+      <input type="tel" inputmode="numeric" maxlength="1"/>
+      <input type="tel" inputmode="numeric" maxlength="1"/>
+      <input type="tel" inputmode="numeric" maxlength="1"/>
     </div>
 
-    <button class="btn" style="margin-top:20px">Подтвердить</button>
+    <button class="btn primary" style="margin-top:20px">Подтвердить</button>
   </div>
 
 </div>
@@ -212,6 +227,7 @@ function go(id){
 /* PHONE */
 const phone = document.getElementById('phone');
 const err = document.getElementById('err');
+const btn = document.getElementById('btnNext');
 
 function format(v){
   v = v.replace(/\D/g,'').slice(0,10);
@@ -225,29 +241,41 @@ function format(v){
   return r.join(' ');
 }
 
+function updateButton(v){
+  const ok = v.length === 10 && v[0] === '9';
+
+  btn.disabled = !ok;
+
+  if(ok){
+    btn.classList.remove('disabled');
+    btn.classList.add('primary');
+  } else {
+    btn.classList.add('disabled');
+    btn.classList.remove('primary');
+  }
+}
+
 phone.addEventListener('input',()=>{
   phone.value = format(phone.value);
+
+  const raw = phone.value.replace(/\D/g,'');
+  updateButton(raw);
+
   err.style.display = 'none';
 });
 
-function check(){
+btn.addEventListener('click',()=>{
   const v = phone.value.replace(/\D/g,'');
 
-  if(v.length !== 10){
+  if(v.length !== 10 || v[0] !== '9'){
     err.style.display = 'block';
-    err.textContent = 'Введите 10 цифр номера';
-    return;
-  }
-
-  if(v[0] !== '9'){
-    err.style.display = 'block';
-    err.textContent = 'Номер должен начинаться с 9';
+    err.textContent = 'Введите корректный номер';
     return;
   }
 
   window.userPhone = phone.value;
   go('s3');
-}
+});
 
 /* CODE */
 document.querySelectorAll('.code-box input').forEach((el,i,arr)=>{
